@@ -203,9 +203,48 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
     return { ...report, chartData, userChartData };
   }, [filteredOrders]);
 
-  const handleDeleteProduct = async (id: string) => { if (confirm('Hapus produk ini?')) { await supabaseService.deleteProduct(id); onProductsChange(); } };
-  const handleDeleteUser = async (id: string) => { if (confirm('Hapus user ini?')) { await supabaseService.deleteUser(id); setUsers(await supabaseService.getUsers()); } };
-  const handleDeleteCustomer = async (id: string) => { if (confirm('Hapus member ini?')) { await supabaseService.deleteCustomer(id); onCustomersChange(); } };
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const addLog = (msg: string) => {
+    console.log(msg);
+    setDebugLogs(prev => [msg, ...prev].slice(0, 5));
+  };
+
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean, id: string, type: 'product' | 'user' | 'customer' }>({ show: false, id: '', type: 'product' });
+
+  const handleDeleteProduct = async (id: string) => { 
+    addLog("Pencet tombol hapus produk id: " + id);
+    setConfirmModal({ show: true, id, type: 'product' });
+  };
+  const handleDeleteUser = async (id: string) => { 
+    addLog("Pencet tombol hapus staf id: " + id);
+    setConfirmModal({ show: true, id, type: 'user' });
+  };
+  const handleDeleteCustomer = async (id: string) => { 
+    addLog("Pencet tombol hapus member id: " + id);
+    setConfirmModal({ show: true, id, type: 'customer' });
+  };
+
+  const processDelete = async () => {
+    const { id, type } = confirmModal;
+    setConfirmModal({ ...confirmModal, show: false });
+    addLog(`Memproses hapus ${type}...`);
+    try {
+      if (type === 'product') {
+        await supabaseService.deleteProduct(id);
+        onProductsChange();
+      } else if (type === 'user') {
+        await supabaseService.deleteUser(id);
+        setUsers(await supabaseService.getUsers());
+      } else if (type === 'customer') {
+        await supabaseService.deleteCustomer(id);
+        onCustomersChange();
+      }
+      addLog(`Berhasil hapus ${type}`);
+    } catch (err: any) {
+      addLog(`Gagal hapus ${type}: ${err.message}`);
+      alert(`Gagal menghapus: ${err.message}`);
+    }
+  };
 
   // Bulk Action Logic
   const handleToggleSelectAll = () => {
@@ -258,6 +297,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
     <React.Fragment>
       <div className="flex flex-col gap-6 relative min-h-screen pb-48">
         <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
+          {debugLogs.length > 0 && (
+            <div className="bg-black text-[9px] text-emerald-400 p-2 font-mono break-all opacity-80">
+              {debugLogs.map((log, i) => <div key={i}>{log}</div>)}
+            </div>
+          )}
           <div className="p-6 pb-2 flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-black text-gray-800 tracking-tight">Pusat Manajemen</h2>
@@ -711,13 +755,54 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
         </div>
       )}
 
+        {confirmModal.show && (
+        <div className="fixed inset-0 z-[11000] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] max-w-sm w-full p-8 animate-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-2xl mb-6 mx-auto">
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 className="text-xl font-black text-center text-gray-800 mb-2 tracking-tight">Konfirmasi Hapus</h2>
+            <p className="text-center text-gray-400 text-xs font-bold uppercase tracking-widest mb-8">Data akan dihapus permanen dari sistem.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmModal({ ...confirmModal, show: false })} className="flex-1 px-4 py-3 border border-gray-200 text-gray-500 font-bold rounded-xl text-xs uppercase">Batal</button>
+              <button onClick={processDelete} className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-black text-xs uppercase shadow-lg shadow-red-100">Ya, Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isFormOpen && (
         <div className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 backdrop-blur-[2px]">
           <div className="bg-white rounded-[2rem] max-w-md w-full p-8 animate-in zoom-in duration-300 shadow-2xl overflow-y-auto max-h-[90vh]">
             {activeTab === 'products' ? (
-              <ProductForm product={editingProduct} onClose={() => setIsFormOpen(false)} onSave={async (p) => { await supabaseService.saveProduct(p); onProductsChange(); setIsFormOpen(false); }} />
+              <ProductForm 
+                product={editingProduct} 
+                onClose={() => setIsFormOpen(false)} 
+                onSave={async (p) => { 
+                  try {
+                    await supabaseService.saveProduct(p); 
+                    onProductsChange(); 
+                    setIsFormOpen(false); 
+                  } catch (err: any) {
+                    alert("Gagal menyimpan produk: " + err.message);
+                  }
+                }} 
+              />
             ) : activeTab === 'users' ? (
-              <UserForm user={editingUser} onClose={() => setIsFormOpen(false)} onSave={async (u) => { await supabaseService.saveUser(u); setUsers(await supabaseService.getUsers()); setIsFormOpen(false); }} />
+              <UserForm 
+                user={editingUser} 
+                onClose={() => setIsFormOpen(false)} 
+                onSave={async (u) => { 
+                  try {
+                    await supabaseService.saveUser(u); 
+                    setUsers(await supabaseService.getUsers()); 
+                    setIsFormOpen(false); 
+                  } catch (err: any) {
+                    console.error("Save User Exception:", err);
+                    alert("ERROR SIMPAN STAF:\n" + err.message);
+                  }
+                }} 
+              />
             ) : (
               <CustomerForm 
                 customer={editingCustomer} 
@@ -725,13 +810,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                 isAdmin={normalizeRole(currentUser.role) === Role.ADMIN}
                 onClose={() => setIsFormOpen(false)} 
                 onSave={async (c) => { 
-                  if (!editingCustomer && !c.created_by) {
-                    c.created_by = currentUser.id;
-                    c.created_by_role = normalizeRole(currentUser.role);
+                  try {
+                    if (!editingCustomer && !c.created_by) {
+                      c.created_by = currentUser.id;
+                      c.created_by_role = normalizeRole(currentUser.role);
+                    }
+                    await supabaseService.saveCustomer(c); 
+                    await onCustomersChange(); 
+                    setIsFormOpen(false); 
+                  } catch (err: any) {
+                    alert("Gagal menyimpan member: " + err.message);
                   }
-                  await supabaseService.saveCustomer(c); 
-                  await onCustomersChange(); 
-                  setIsFormOpen(false); 
                 }} 
               />
             )}

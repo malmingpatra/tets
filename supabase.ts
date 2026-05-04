@@ -58,16 +58,23 @@ export const supabaseService = {
       return;
     }
     const { error } = await supabase.from('products').upsert(product);
-    if (error) throw error;
+    if (error) {
+      console.error("Gagal saveProduct:", error);
+      throw new Error(error.message);
+    }
   },
 
   deleteProduct: async (id: string): Promise<void> => {
-    if (!supabase) {
-      const prods = (getLocalCache('pos_products') || []).filter((p: any) => p.id !== id);
-      updateLocalCache('pos_products', prods);
-      return;
+    // Optimistic cache update
+    const prods = (getLocalCache('pos_products') || []).filter((p: any) => p.id !== id);
+    updateLocalCache('pos_products', prods);
+
+    if (!supabase) return;
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) {
+      console.error("Gagal deleteProduct:", error);
+      throw new Error(error.message);
     }
-    await supabase.from('products').delete().eq('id', id);
   },
 
   getUsers: async (): Promise<User[]> => {
@@ -92,6 +99,7 @@ export const supabaseService = {
 
   saveUser: async (user: User): Promise<void> => {
     if (!supabase) {
+      console.log("Saving to Local Storage (No Supabase Config)");
       const users = getLocalCache('pos_users') || [];
       const index = users.findIndex((u: any) => u.id === user.id);
       if (index > -1) users[index] = user;
@@ -99,16 +107,56 @@ export const supabaseService = {
       updateLocalCache('pos_users', users);
       return;
     }
-    await supabase.from('users').upsert(user);
+    
+    try {
+      const { error } = await supabase.from('users').upsert(user);
+      if (error) {
+        throw new Error(`Detail: ${error.message} (Kode: ${error.code})`);
+      }
+    } catch (err: any) {
+      console.error("Gagal saveUser:", err);
+      throw new Error(err.message || "Pastikan RLS di Supabase sudah diset ke 'public' / true.");
+    }
   },
 
   deleteUser: async (id: string): Promise<void> => {
-    if (!supabase) {
-      const users = (getLocalCache('pos_users') || []).filter((u: any) => u.id !== id);
-      updateLocalCache('pos_users', users);
-      return;
+    // Optimistic cache update
+    const users = (getLocalCache('pos_users') || []).filter((u: any) => u.id !== id);
+    updateLocalCache('pos_users', users);
+
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (err: any) {
+      console.error("Gagal deleteUser:", err);
+      throw new Error(err.message);
     }
-    await supabase.from('users').delete().eq('id', id);
+  },
+
+  verifyPin: async (pin: string): Promise<User | null> => {
+    if (!supabase) {
+      const users = getLocalCache('pos_users') || [];
+      const found = users.find((u: any) => u.pin === pin);
+      return found ? { ...found, role: normalizeRole(found.role) } : null;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('pin', pin)
+        .single();
+      
+      if (error || !data) return null;
+      return {
+        ...data,
+        role: normalizeRole(data.role)
+      } as User;
+    } catch (err) {
+      return null;
+    }
   },
 
   getCustomers: async (user: User): Promise<Customer[]> => {
@@ -159,10 +207,10 @@ export const supabaseService = {
     updateLocalCache('pos_customers', customers);
 
     if (!supabase) return;
-    try {
-      await supabase.from('customers').upsert(customer);
-    } catch (e) {
-      console.error("Sync failed for saveCustomer", e);
+    const { error } = await supabase.from('customers').upsert(customer);
+    if (error) {
+      console.error("Sync failed for saveCustomer", error);
+      throw new Error(error.message);
     }
   },
 
@@ -207,10 +255,10 @@ export const supabaseService = {
     updateLocalCache('pos_customers', customers);
 
     if (!supabase) return;
-    try {
-      await supabase.from('customers').delete().eq('id', id);
-    } catch (e) {
-      console.error("Sync failed for deleteCustomer", e);
+    const { error } = await supabase.from('customers').delete().eq('id', id);
+    if (error) {
+      console.error("Sync failed for deleteCustomer", error);
+      throw new Error(error.message);
     }
   },
 

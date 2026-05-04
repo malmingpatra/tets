@@ -16,18 +16,36 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSave }) => {
     role: Role.KASIR
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [internalError, setInternalError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting UserForm with data:", formData);
     if (formData.pin.length < 4 || formData.pin.length > 12) {
       alert('PIN harus berukuran 4 sampai 12 digit');
       return;
     }
-    onSave(formData);
+    try {
+      console.log("Calling onSave callback...");
+      setInternalError(null);
+      await onSave(formData);
+      console.log("onSave callback finished successfully");
+    } catch (err: any) {
+      console.error("UserForm save error:", err);
+      setInternalError(err.message);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="text-xl font-black text-gray-800 mb-6 tracking-tight">{user ? 'Edit Profil User' : 'Tambah User Baru'}</h2>
+      
+      {internalError && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+          <p className="text-red-700 text-[10px] font-black uppercase tracking-widest mb-1">Gagal Menyimpan</p>
+          <p className="text-red-600 text-xs font-bold">{internalError}</p>
+        </div>
+      )}
       <div className="space-y-4">
         <div>
           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nama Lengkap</label>

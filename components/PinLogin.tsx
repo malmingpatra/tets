@@ -11,12 +11,8 @@ interface PinLoginProps {
 const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
-  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [activeKey, setActiveKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabaseService.getUsers().then(setUsers);
-  }, []);
 
   const handleKeyPress = (num: string) => {
     if (pin.length < 12) {
@@ -35,13 +31,16 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
     onCancel();
   };
 
-  const handleLoginAttempt = () => {
+  const handleLoginAttempt = async () => {
     if (pin.length < 4) {
       setError('PIN MINIMAL 4 DIGIT');
       return;
     }
 
-    const foundUser = users.find(u => u.pin === pin);
+    setLoading(true);
+    const foundUser = await supabaseService.verifyPin(pin);
+    setLoading(false);
+
     if (foundUser) {
       onLogin(foundUser);
       setPin('');
@@ -150,14 +149,14 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
           <button 
             type="button"
             onClick={handleLoginAttempt}
-            disabled={pin.length < 4}
+            disabled={pin.length < 4 || loading}
             className={`w-full py-4 landscape:py-3 rounded-2xl landscape:rounded-xl font-black text-sm tracking-[0.2em] flex items-center justify-center gap-3 select-none outline-none ${
-              pin.length >= 4 
+              pin.length >= 4 && !loading
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-100 text-gray-300 cursor-not-allowed'
             }`}
           >
-            AUTHORIZE
+            {loading ? <i className="fas fa-spinner fa-spin"></i> : 'AUTHORIZE'}
           </button>
         </div>
       </div>
