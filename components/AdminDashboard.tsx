@@ -102,6 +102,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
 
   const [activeTab, setActiveTab] = useState<'products' | 'users' | 'customers' | 'reports'>(allowedTabs[0] as any || 'products');
   const [productPage, setProductPage] = useState(1);
+  const [userPage, setUserPage] = useState(1);
+  const [customerPage, setCustomerPage] = useState(1);
   const itemsPerPage = 10;
   
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('all');
@@ -111,6 +113,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerFilterUser, setCustomerFilterUser] = useState('all');
   
@@ -130,6 +133,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
       p.category.toLowerCase().includes(productSearch.toLowerCase())
     );
   }, [products, productSearch]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => 
+      u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
+      u.role.toLowerCase().includes(userSearch.toLowerCase())
+    );
+  }, [users, userSearch]);
 
   const filteredCustomers = useMemo(() => {
     return customers.filter(c => {
@@ -358,8 +368,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
 
           {activeTab === 'users' && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-               <div className="flex justify-end">
-                <button onClick={() => { setEditingUser(null); setIsFormOpen(true); }} className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 text-sm shadow-lg">
+              <div className="flex flex-col gap-3 items-center">
+                <div className="relative flex-1 w-full">
+                  <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                  <input type="text" placeholder="Cari staff..." className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none text-sm shadow-sm" value={userSearch} onChange={(e) => { setUserSearch(e.target.value); setUserPage(1); }} />
+                </div>
+                <button onClick={() => { setEditingUser(null); setIsFormOpen(true); }} className="w-full bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-200 active:scale-95 transition-transform">
                   <i className="fas fa-user-plus"></i> Tambah Staff
                 </button>
               </div>
@@ -374,8 +388,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                       </tr>
                     </thead>
                     <tbody className="divide-y text-sm">
-                      {users.map(u => (
-                        <tr key={u.id} className="hover:bg-gray-50/50">
+                      {filteredUsers.slice((userPage - 1) * itemsPerPage, userPage * itemsPerPage).map(u => (
+                        <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="px-4 md:px-6 py-4">
                             <span className="font-bold text-gray-800 block truncate w-full">{u.name}</span>
                           </td>
@@ -394,6 +408,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                   </table>
                 </div>
               </div>
+
+              {/* Pagination Controls for Users */}
+              {filteredUsers.length > itemsPerPage && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <button 
+                    disabled={userPage === 1}
+                    onClick={() => setUserPage(prev => prev - 1)}
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 disabled:opacity-30 active:scale-90 transition-transform shadow-sm"
+                  >
+                    <i className="fas fa-chevron-left text-xs"></i>
+                  </button>
+                  <div className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-[11px] font-black text-gray-500 shadow-sm">
+                    {userPage} / {Math.ceil(filteredUsers.length / itemsPerPage)}
+                  </div>
+                  <button 
+                    disabled={userPage >= Math.ceil(filteredUsers.length / itemsPerPage)}
+                    onClick={() => setUserPage(prev => prev + 1)}
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 disabled:opacity-30 active:scale-90 transition-transform shadow-sm"
+                  >
+                    <i className="fas fa-chevron-right text-xs"></i>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -402,7 +439,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
               <div className="flex flex-col gap-3 items-center">
                 <div className="relative flex-1 w-full">
                   <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                  <input type="text" placeholder="Cari member..." className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none text-sm shadow-sm" value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} />
+                  <input type="text" placeholder="Cari member..." className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none text-sm shadow-sm" value={customerSearch} onChange={(e) => { setCustomerSearch(e.target.value); setCustomerPage(1); }} />
                 </div>
                 <div className="flex flex-col gap-2 w-full">
                   {userRole === Role.ADMIN && (
@@ -432,8 +469,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                       </tr>
                     </thead>
                     <tbody className="divide-y text-sm">
-                      {filteredCustomers.map(c => (
-                        <tr key={c.id} className={`${selectedCustomerIds.includes(c.id) ? 'bg-blue-50/50' : ''} hover:bg-gray-50/50`}>
+                      {filteredCustomers.slice((customerPage - 1) * itemsPerPage, customerPage * itemsPerPage).map(c => (
+                        <tr key={c.id} className={`${selectedCustomerIds.includes(c.id) ? 'bg-blue-50/50' : ''} hover:bg-gray-50/50 transition-colors`}>
                           <td className="px-4 md:px-6 py-4"><input type="checkbox" checked={selectedCustomerIds.includes(c.id)} onChange={() => handleToggleSelectOne(c.id)} /></td>
                           <td className="px-2 py-4 overflow-hidden">
                             <span className="font-bold text-gray-800 block truncate">{c.name}</span>
@@ -452,6 +489,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                   </table>
                 </div>
               </div>
+
+              {/* Pagination Controls for Customers */}
+              {filteredCustomers.length > itemsPerPage && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                  <button 
+                    disabled={customerPage === 1}
+                    onClick={() => setCustomerPage(prev => prev - 1)}
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 disabled:opacity-30 active:scale-90 transition-transform shadow-sm"
+                  >
+                    <i className="fas fa-chevron-left text-xs"></i>
+                  </button>
+                  <div className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-[11px] font-black text-gray-500 shadow-sm">
+                    {customerPage} / {Math.ceil(filteredCustomers.length / itemsPerPage)}
+                  </div>
+                  <button 
+                    disabled={customerPage >= Math.ceil(filteredCustomers.length / itemsPerPage)}
+                    onClick={() => setCustomerPage(prev => prev + 1)}
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 disabled:opacity-30 active:scale-90 transition-transform shadow-sm"
+                  >
+                    <i className="fas fa-chevron-right text-xs"></i>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
