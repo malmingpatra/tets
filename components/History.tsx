@@ -107,8 +107,8 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">No. Nota & Pembeli</th>
-                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">Petugas</th>
+                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">No. Nota</th>
+                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Petugas</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Total</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
               </tr>
@@ -131,7 +131,7 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">{o.user_name.charAt(0)}</div>
                         <span className="text-[11px] font-bold text-gray-700">{o.user_name}</span>
                       </div>
