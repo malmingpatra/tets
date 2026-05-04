@@ -68,11 +68,11 @@ const ProductRow = ({
       className="p-3 md:p-4 flex items-center justify-between hover:bg-gray-50 transition gap-3 select-none"
     >
       <div ref={containerRef} className="w-[50%] min-w-[120px] flex-shrink-0 overflow-hidden">
-          <div className={isScrolling ? 'animate-marquee-seamless flex w-max gap-10' : 'flex flex-col gap-1'}>
+          <div className={isScrolling ? 'animate-marquee-seamless flex w-max gap-10' : 'flex'}>
           {/* Main Content Block */}
           <div ref={contentRef} className="flex flex-col gap-1 shrink-0 min-w-full">
             {/* Category Tag */}
-            <div className="category-tag bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase tracking-widest text-[8px] md:text-[9px] self-start max-w-full truncate">
+            <div className={`category-tag bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase tracking-widest text-[8px] md:text-[9px] self-start whitespace-nowrap ${!isScrolling && 'truncate'}`}>
               {p.category}
             </div>
             {/* Name */}
@@ -86,7 +86,7 @@ const ProductRow = ({
           {/* Duplicate Block for Seamless Scrolling (Sync) */}
           {isScrolling && (
             <div className="flex flex-col gap-1 shrink-0 min-w-full">
-              <div className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase tracking-widest text-[8px] md:text-[9px] self-start max-w-full">
+              <div className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase tracking-widest text-[8px] md:text-[9px] self-start whitespace-nowrap">
                 {p.category}
               </div>
               <h3 className="font-bold text-gray-800 text-sm md:text-base whitespace-nowrap">

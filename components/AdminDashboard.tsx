@@ -31,9 +31,9 @@ const AdminProductRow = ({ p, onEdit, onDelete }: { p: Product, onEdit: (p: Prod
     const checkOverflow = () => {
       if (contentRef.current && containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
-        const nameEl = contentRef.current.querySelector('.product-name-span');
-        const nameWidth = nameEl ? (nameEl as HTMLElement).scrollWidth : 0;
-        setCanScroll(nameWidth > containerWidth);
+        // In vertical stack, we check if the widest element (category pill or name) overflows the container
+        const contentWidth = contentRef.current.scrollWidth;
+        setCanScroll(contentWidth > containerWidth);
       }
     };
     checkOverflow();
@@ -53,21 +53,29 @@ const AdminProductRow = ({ p, onEdit, onDelete }: { p: Product, onEdit: (p: Prod
       className="hover:bg-gray-50/50 transition-colors select-none"
     >
       <td className="px-4 md:px-6 py-4">
-        <div ref={containerRef} className="overflow-hidden mb-1">
-          <div className={isScrolling ? 'animate-marquee-seamless flex w-max gap-10' : 'flex flex-col'}>
+        <div ref={containerRef} className="overflow-hidden">
+          <div className={isScrolling ? 'animate-marquee-seamless flex w-max gap-10' : 'flex'}>
             <div ref={contentRef} className="flex flex-col gap-0.5 shrink-0 min-w-full">
-               <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase shrink-0 w-fit">{p.category}</span>
-               <span className={`product-name-span font-bold text-gray-800 block leading-tight whitespace-nowrap ${!isScrolling && 'truncate'}`}>{p.name}</span>
+               <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase shrink-0 w-fit whitespace-nowrap">
+                 {p.category}
+               </span>
+               <span className={`product-name-span font-bold text-gray-800 block leading-tight whitespace-nowrap ${!isScrolling && 'truncate'}`}>
+                 {p.name}
+               </span>
             </div>
             {isScrolling && (
               <div className="flex flex-col gap-0.5 shrink-0 min-w-full">
-                 <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase shrink-0 w-fit">{p.category}</span>
-                 <span className="font-bold text-gray-800 leading-tight whitespace-nowrap">{p.name}</span>
+                 <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase shrink-0 w-fit whitespace-nowrap">
+                   {p.category}
+                 </span>
+                 <span className="font-bold text-gray-800 leading-tight whitespace-nowrap">
+                   {p.name}
+                 </span>
               </div>
             )}
           </div>
         </div>
-        <span className="text-[9px] font-bold text-gray-400 block">Rp {p.price.toLocaleString()}</span>
+        <span className="text-[11px] font-bold text-gray-400 block mt-1">Rp {p.price.toLocaleString()}</span>
       </td>
       <td className="px-2 md:px-4 py-4 text-center">
         <span className={`inline-block px-2 py-1 rounded text-[10px] font-black ${p.stock < 10 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>{p.stock}</span>
