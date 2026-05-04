@@ -80,8 +80,8 @@ const AdminProductRow = ({ p, onEdit, onDelete }: { p: Product, onEdit: (p: Prod
       <td className="px-2 md:px-4 py-4 text-center">
         <span className={`inline-block px-2 py-1 rounded text-[10px] font-black ${p.stock < 10 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>{p.stock}</span>
       </td>
-      <td className="px-4 md:px-6 py-4 text-right">
-        <div className="flex justify-end gap-1 md:gap-2">
+      <td className="px-4 md:px-6 py-4 text-center">
+        <div className="flex justify-center gap-1 md:gap-2">
           <button onClick={() => onEdit(p)} className="text-blue-500 hover:bg-blue-50 w-8 h-8 rounded-lg transition active:scale-95 flex items-center justify-center"><i className="fas fa-edit"></i></button>
           <button onClick={() => onDelete(p.id)} className="text-red-400 hover:bg-red-50 w-8 h-8 rounded-lg transition active:scale-95 flex items-center justify-center"><i className="fas fa-trash"></i></button>
         </div>
@@ -324,7 +324,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                       <tr>
                         <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-1/2">Produk</th>
                         <th className="px-2 md:px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-1/4">Stok</th>
-                        <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right w-1/4">Aksi</th>
+                        <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-1/4">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y text-sm">
