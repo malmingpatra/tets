@@ -108,7 +108,6 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">No. Nota</th>
-                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Petugas</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Total</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
               </tr>
@@ -116,7 +115,7 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
             <tbody className="divide-y">
               {displayData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic text-sm">
+                  <td colSpan={3} className="px-6 py-10 text-center text-gray-400 italic text-sm">
                     {isFiltered ? 'Tidak ada data yang cocok dengan filter' : 'Tidak ada riwayat'}
                   </td>
                 </tr>
@@ -126,14 +125,19 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="font-mono font-bold text-blue-600 group-hover:text-blue-700">{o.receipt_number}</span>
-                        {o.buyer_name && <span className="text-[10px] font-bold text-gray-600 mt-1 flex items-center gap-1"><i className="fas fa-user text-[8px]"></i> {o.buyer_name}</span>}
-                        <span className="text-[9px] text-gray-400 font-medium mt-0.5">{new Date(o.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • {new Date(o.created_at).toLocaleDateString('id-ID')}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">{o.user_name.charAt(0)}</div>
-                        <span className="text-[11px] font-bold text-gray-700">{o.user_name}</span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                          {o.buyer_name && (
+                            <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                              {o.buyer_name}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                            {o.user_name}
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-gray-400 font-medium mt-1">
+                          {new Date(o.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • {new Date(o.created_at).toLocaleDateString('id-ID')}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right"><span className="font-bold text-gray-700 text-[11px] md:text-xs whitespace-nowrap">Rp {o.total_amount.toLocaleString('id-ID')}</span></td>

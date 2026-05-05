@@ -113,7 +113,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
+  const [productFilterCategory, setProductFilterCategory] = useState('all');
   const [userSearch, setUserSearch] = useState('');
+  const [userFilterRole, setUserFilterRole] = useState('all');
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerFilterUser, setCustomerFilterUser] = useState('all');
   
@@ -128,18 +130,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
   }, []);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => 
-      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      p.category.toLowerCase().includes(productSearch.toLowerCase())
-    );
-  }, [products, productSearch]);
+    const list = products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+                           p.category.toLowerCase().includes(productSearch.toLowerCase());
+      const matchesCategory = productFilterCategory === 'all' || p.category === productFilterCategory;
+      return matchesSearch && matchesCategory;
+    });
+    return [...list].sort((a, b) => a.name.localeCompare(b.name));
+  }, [products, productSearch, productFilterCategory]);
+
+  const categories = useMemo(() => {
+    const unique = Array.from(new Set(products.map(p => p.category))).sort();
+    return unique;
+  }, [products]);
 
   const filteredUsers = useMemo(() => {
-    return users.filter(u => 
-      u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
-      u.role.toLowerCase().includes(userSearch.toLowerCase())
-    );
-  }, [users, userSearch]);
+    return users.filter(u => {
+      const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
+                           u.role.toLowerCase().includes(userSearch.toLowerCase());
+      const matchesRole = userFilterRole === 'all' || u.role === userFilterRole;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, userSearch, userFilterRole]);
 
   const filteredCustomers = useMemo(() => {
     return customers.filter(c => {
@@ -357,9 +369,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                   <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                   <input type="text" placeholder="Cari di inventaris..." className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none text-sm shadow-sm" value={productSearch} onChange={(e) => { setProductSearch(e.target.value); setProductPage(1); }} />
                 </div>
-                <button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} className="w-full bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-200 active:scale-95 transition-transform">
-                  <i className="fas fa-plus-circle"></i> Tambah Produk
-                </button>
+                <div className="flex flex-col gap-2 w-full">
+                  <select 
+                    className="border border-gray-200 rounded-2xl px-4 py-3 bg-white text-sm focus:outline-none font-bold text-gray-600 shadow-sm"
+                    value={productFilterCategory}
+                    onChange={(e) => { setProductFilterCategory(e.target.value); setProductPage(1); }}
+                  >
+                    <option value="all">Semua Kategori</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} className="w-full bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-200 active:scale-95 transition-transform">
+                    <i className="fas fa-plus-circle"></i> Tambah Produk
+                  </button>
+                </div>
               </div>
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto no-scrollbar">
@@ -417,9 +441,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                   <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                   <input type="text" placeholder="Cari staff..." className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none text-sm shadow-sm" value={userSearch} onChange={(e) => { setUserSearch(e.target.value); setUserPage(1); }} />
                 </div>
-                <button onClick={() => { setEditingUser(null); setIsFormOpen(true); }} className="w-full bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-200 active:scale-95 transition-transform">
-                  <i className="fas fa-user-plus"></i> Tambah Staff
-                </button>
+                <div className="flex flex-col gap-2 w-full">
+                  <select 
+                    className="border border-gray-200 rounded-2xl px-4 py-3 bg-white text-sm focus:outline-none font-bold text-gray-600 shadow-sm"
+                    value={userFilterRole}
+                    onChange={(e) => { setUserFilterRole(e.target.value); setUserPage(1); }}
+                  >
+                    <option value="all">Semua Role</option>
+                    {Object.values(Role).map(role => (
+                      <option key={role} value={role}>{role}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => { setEditingUser(null); setIsFormOpen(true); }} className="w-full bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-200 active:scale-95 transition-transform">
+                    <i className="fas fa-user-plus"></i> Tambah Staff
+                  </button>
+                </div>
               </div>
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto no-scrollbar">
@@ -428,7 +464,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                       <tr>
                         <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-1/2">Nama Staff</th>
                         <th className="px-2 md:px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-1/4">Role</th>
-                        <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right w-1/4">Aksi</th>
+                        <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-1/4">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y text-sm">
@@ -440,8 +476,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                           <td className="px-2 md:px-4 py-4 text-center">
                             <span className="inline-block px-2 py-1 bg-blue-50 text-blue-600 rounded text-[9px] font-black uppercase tracking-tight">{u.role}</span>
                           </td>
-                          <td className="px-4 md:px-6 py-4 text-right">
-                            <div className="flex justify-end gap-1 md:gap-2">
+                          <td className="px-4 md:px-6 py-4 text-center">
+                            <div className="flex justify-center gap-1 md:gap-2">
                               <button onClick={() => { setEditingUser(u); setIsFormOpen(true); }} className="text-blue-500 hover:bg-blue-50 w-8 h-8 rounded-lg transition flex items-center justify-center"><i className="fas fa-edit text-xs"></i></button>
                               <button onClick={() => handleDeleteUser(u.id)} className="text-red-400 hover:bg-red-50 w-8 h-8 rounded-lg transition flex items-center justify-center"><i className="fas fa-trash text-xs"></i></button>
                             </div>
@@ -507,22 +543,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="px-4 md:px-6 py-4 w-12"><input type="checkbox" checked={filteredCustomers.length > 0 && selectedCustomerIds.length === filteredCustomers.length} onChange={handleToggleSelectAll} /></th>
-                        <th className="px-2 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-1/2">Informasi Member</th>
-                        <th className="px-2 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right w-1/4">Belanja</th>
-                        <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right w-24">Aksi</th>
+                        <th className="px-2 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left w-full">Nama</th>
+                        <th className="px-4 md:px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-24">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y text-sm">
                       {filteredCustomers.slice((customerPage - 1) * itemsPerPage, customerPage * itemsPerPage).map(c => (
                         <tr key={c.id} className={`${selectedCustomerIds.includes(c.id) ? 'bg-blue-50/50' : ''} hover:bg-gray-50/50 transition-colors`}>
                           <td className="px-4 md:px-6 py-4"><input type="checkbox" checked={selectedCustomerIds.includes(c.id)} onChange={() => handleToggleSelectOne(c.id)} /></td>
-                          <td className="px-2 py-4 overflow-hidden">
+                          <td className="px-2 py-4 overflow-hidden text-left">
                             <span className="font-bold text-gray-800 block truncate">{c.name}</span>
                             <span className="text-[10px] font-black text-gray-400 block truncate">{c.phone}</span>
+                            <span className="text-[10px] font-black text-emerald-600 block truncate">Total: Rp {c.total_spent.toLocaleString()}</span>
                           </td>
-                          <td className="px-2 py-4 text-right font-black text-gray-600 truncate">Rp {c.total_spent.toLocaleString()}</td>
-                          <td className="px-4 md:px-6 py-4 text-right">
-                            <div className="flex justify-end gap-1 md:gap-2">
+                          <td className="px-4 md:px-6 py-4 text-center">
+                            <div className="flex justify-center gap-1 md:gap-2">
                               <button onClick={() => { setEditingCustomer(c); setIsFormOpen(true); }} className="text-blue-500 hover:bg-blue-50 w-8 h-8 rounded-lg transition flex items-center justify-center"><i className="fas fa-edit"></i></button>
                               <button onClick={() => handleDeleteCustomer(c.id)} className="text-red-400 hover:bg-red-50 w-8 h-8 rounded-lg transition flex items-center justify-center"><i className="fas fa-trash"></i></button>
                             </div>
