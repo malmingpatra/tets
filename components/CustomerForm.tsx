@@ -77,7 +77,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, users = [], isAdm
       </div>
       <div className="flex gap-3 pt-6">
         <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-gray-200 text-gray-500 font-bold rounded-xl">Batal</button>
-        <button type="submit" className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl font-black">Simpan Member</button>
+        <button type="submit" className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl font-black">SIMPAN</button>
       </div>
     </form>
   );

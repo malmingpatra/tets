@@ -271,36 +271,54 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
     setSelectedCustomerIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
 
-  const onBulkDeleteClick = async (e: React.MouseEvent) => {
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  const onBulkDeleteProcess = async () => {
     if (isProcessing || selectedCustomerIds.length === 0) return;
-    if (window.confirm(`Hapus permanen ${selectedCustomerIds.length} member terpilih?`)) {
-      setIsProcessing(true);
-      try {
-        await supabaseService.bulkDeleteCustomers(selectedCustomerIds);
-        await onCustomersChange();
-        setSelectedCustomerIds([]);
-      } catch (error) {
-        alert("Terjadi kesalahan.");
-      } finally { setIsProcessing(false); }
-    }
+    setIsProcessing(true);
+    try {
+      addLog("Bulk hapus payload dikirim...");
+      await supabaseService.bulkDeleteCustomers(selectedCustomerIds);
+      await onCustomersChange();
+      addLog("Data di-refresh");
+      setSelectedCustomerIds([]);
+      setShowBulkDeleteConfirm(false);
+    } catch (error: any) {
+      addLog(`Gagal bulk hapus: ${error.message}`);
+      alert(`Terjadi kesalahan: ${error.message}`);
+    } finally { setIsProcessing(false); }
   };
 
-  const onBulkTransferSubmit = async () => {
+  const onBulkDeleteClick = (e: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const onBulkTransferSubmit = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (isProcessing || !targetOwnerId) return;
     const newOwner = users.find(u => u.id === targetOwnerId);
     if (!newOwner) return;
-
-    if (window.confirm(`Pindahkan kepemilikan ${selectedCustomerIds.length} member ke ${newOwner.name}?`)) {
-      setIsProcessing(true);
-      try {
-        await supabaseService.bulkTransferCustomers(selectedCustomerIds, newOwner.id, newOwner.role);
-        await onCustomersChange();
-        setSelectedCustomerIds([]);
-        setShowTransferModal(false);
-      } catch (error) {
-        alert("Terjadi kesalahan.");
-      } finally { setIsProcessing(false); }
-    }
+    
+    addLog(`Pencet bulk pindah ke: ${newOwner.name}`);
+    setIsProcessing(true);
+    try {
+      await supabaseService.bulkTransferCustomers(selectedCustomerIds, newOwner.id, newOwner.role);
+      addLog("Bulk pindah payload dikirim...");
+      await onCustomersChange();
+      addLog("Data di-refresh");
+      setSelectedCustomerIds([]);
+      setShowTransferModal(false);
+    } catch (error: any) {
+      addLog(`Gagal bulk pindah: ${error.message}`);
+      alert(`Terjadi kesalahan: ${error.message}`);
+    } finally { setIsProcessing(false); }
   };
 
   const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -338,22 +356,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
               ></div>
 
               {allowedTabs.includes('products') && (
-                <button onClick={() => { setActiveTab('products'); setSelectedCustomerIds([]); }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'products' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <button onClick={() => { if(activeTab !== 'products') { setActiveTab('products'); setSelectedCustomerIds([]); } }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'products' ? 'text-blue-600' : 'text-gray-400'}`}>
                   <i className="fas fa-box"></i> <span className="hidden sm:inline">Produk</span>
                 </button>
               )}
               {allowedTabs.includes('users') && (
-                <button onClick={() => { setActiveTab('users'); setSelectedCustomerIds([]); }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'users' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <button onClick={() => { if(activeTab !== 'users') { setActiveTab('users'); setSelectedCustomerIds([]); } }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'users' ? 'text-blue-600' : 'text-gray-400'}`}>
                   <i className="fas fa-user-shield"></i> <span className="hidden sm:inline">Staff</span>
                 </button>
               )}
               {allowedTabs.includes('customers') && (
-                <button onClick={() => { setActiveTab('customers'); setSelectedCustomerIds([]); }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'customers' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <button onClick={() => { if(activeTab !== 'customers') { setActiveTab('customers'); setSelectedCustomerIds([]); } }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'customers' ? 'text-blue-600' : 'text-gray-400'}`}>
                   <i className="fas fa-users"></i> <span className="hidden sm:inline">Member</span>
                 </button>
               )}
               {allowedTabs.includes('reports') && (
-                <button onClick={() => { setActiveTab('reports'); setSelectedCustomerIds([]); }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'reports' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <button onClick={() => { if(activeTab !== 'reports') { setActiveTab('reports'); setSelectedCustomerIds([]); } }} className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'reports' ? 'text-blue-600' : 'text-gray-400'}`}>
                   <i className="fas fa-chart-bar"></i> <span className="hidden sm:inline">Laporan</span>
                 </button>
               )}
@@ -537,6 +555,39 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
                   </button>
                 </div>
               </div>
+
+              {selectedCustomerIds.length > 0 && (
+                <div className="bg-gray-900 text-white rounded-[1.5rem] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl border border-gray-800 relative z-[200]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-black">{selectedCustomerIds.length}</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Member Terpilih</p>
+                      <button type="button" onClick={() => setSelectedCustomerIds([])} className="text-[9px] text-gray-400 font-bold uppercase hover:text-white transition">Batal Pilih</button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <button 
+                      type="button" 
+                      disabled={isProcessing}
+                      onClick={() => setShowTransferModal(true)} 
+                      className={`flex-1 sm:flex-initial bg-white text-gray-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform cursor-pointer ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <i className="fas fa-exchange-alt mr-1"></i> {isProcessing ? 'Proses...' : 'Pindahkan'}
+                    </button>
+                    <button 
+                      type="button" 
+                      disabled={isProcessing}
+                      onClick={onBulkDeleteClick} 
+                      className={`flex-1 sm:flex-initial bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform cursor-pointer ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <i className="fas fa-trash mr-1"></i> {isProcessing ? '...' : 'Hapus'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto no-scrollbar">
                   <table className="w-full text-left table-fixed min-w-[360px]">
@@ -749,26 +800,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
         </div>
       </div>
 
-      {/* Floating Bulk Action Bar */}
-      {selectedCustomerIds.length > 0 && activeTab === 'customers' && (
-        <div className="fixed bottom-28 md:bottom-10 left-1/2 -translate-x-1/2 z-[9999] w-[95%] max-w-2xl animate-in slide-in-from-bottom-12 duration-500">
-          <div className="bg-gray-900 text-white rounded-[2.5rem] px-4 py-3 md:px-8 md:py-5 flex items-center justify-between shadow-2xl border border-gray-800 backdrop-blur-xl bg-opacity-95">
-             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-black">{selectedCustomerIds.length}</span>
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-xs font-black uppercase tracking-widest text-blue-400">Member Terpilih</p>
-                  <button onClick={() => setSelectedCustomerIds([])} className="text-[9px] text-gray-400 font-bold uppercase hover:text-white transition">Batal Pilih</button>
-                </div>
-             </div>
-             <div className="flex gap-2">
-                <button onClick={() => setShowTransferModal(true)} className="bg-white text-gray-900 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95"><i className="fas fa-exchange-alt mr-2"></i> Pindahkan</button>
-                <button onClick={onBulkDeleteClick} className="bg-red-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95"><i className="fas fa-trash mr-2"></i> Hapus</button>
-             </div>
-          </div>
-        </div>
-      )}
+      {/* Reports Section (existing) */}
 
       {/* Transfer Modal */}
       {showTransferModal && (
@@ -801,6 +833,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products, onProductsCha
             <div className="flex gap-3">
               <button onClick={() => setConfirmModal({ ...confirmModal, show: false })} className="flex-1 px-4 py-3 border border-gray-200 text-gray-500 font-bold rounded-xl text-xs uppercase">Batal</button>
               <button onClick={processDelete} className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-black text-xs uppercase shadow-lg shadow-red-100">Ya, Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-[11000] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] max-w-sm w-full p-8 animate-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-2xl mb-6 mx-auto">
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 className="text-xl font-black text-center text-gray-800 mb-2 tracking-tight">Hapus {selectedCustomerIds.length} Member?</h2>
+            <p className="text-center text-gray-400 text-xs font-bold uppercase tracking-widest mb-8">Data akan dihapus permanen dari sistem.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowBulkDeleteConfirm(false)} className="flex-1 px-4 py-3 border border-gray-200 text-gray-500 font-bold rounded-xl text-xs uppercase cursor-pointer">Batal</button>
+              <button onClick={onBulkDeleteProcess} disabled={isProcessing} className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-black text-xs uppercase shadow-lg shadow-red-100 cursor-pointer">{isProcessing ? 'Proses...' : 'Ya, Hapus'}</button>
             </div>
           </div>
         </div>
