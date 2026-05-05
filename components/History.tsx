@@ -51,52 +51,55 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
   return (
     <div className="space-y-6">
       <div className="bg-white p-4 rounded-xl border flex flex-col gap-4">
-        <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-gray-800">
-            Riwayat {!canSeeStaffFilter && '(Milik Saya)'}
-          </h2>
-          {isFiltered && (
-            <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">
-              <i className="fas fa-filter mr-1"></i> Filter Aktif
-            </p>
-          )}
-        </div>
-        
         <div className="flex flex-col gap-3 w-full">
           <div className="relative w-full">
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
             <input 
               type="text" 
-              placeholder="Cari Nota / Nama..." 
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none text-sm"
+              placeholder="Cari Nota atau Nama Member..." 
+              className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none text-sm font-medium shadow-sm transition-focus"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(20); }}
             />
           </div>
 
-          <div className="flex flex-col gap-2 w-full">
-            {canSeeStaffFilter && (
-              <select 
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:outline-none font-medium"
-                value={filterUser}
-                onChange={(e) => { setFilterUser(e.target.value); setVisibleCount(20); }}
-              >
-                <option value="all">Semua Karyawan</option>
-                {staffList.map(name => <option key={name} value={name}>{name}</option>)}
-              </select>
-            )}
-            <div className="flex gap-2">
+          <div className="flex flex-row gap-2 w-full">
+            <div className="flex-[50] min-w-0">
+              {canSeeStaffFilter ? (
+                <select 
+                  className="w-full border border-gray-200 rounded-xl px-3 py-3 bg-gray-50 text-[12px] md:text-sm focus:outline-none font-bold text-gray-600 appearance-none shadow-sm h-full"
+                  value={filterUser}
+                  onChange={(e) => { setFilterUser(e.target.value); setVisibleCount(20); }}
+                >
+                  <option value="all">Staf: Semua</option>
+                  {staffList.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+              ) : (
+                <div className="w-full h-full flex items-center px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Milik Saya</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-[35] min-w-0">
               <input 
                 type="date" 
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:outline-none font-medium"
+                className="w-full border border-gray-200 rounded-xl px-2 py-3 bg-gray-50 text-[11px] focus:outline-none font-bold text-gray-600 shadow-sm h-full"
                 value={filterDate}
                 onChange={(e) => { setFilterDate(e.target.value); setVisibleCount(20); }}
               />
-              {isFiltered && (
-                <button onClick={handleReset} className="p-2.5 text-red-500 bg-red-50 rounded-lg" title="Reset Filter">
-                  <i className="fas fa-times-circle"></i>
-                </button>
-              )}
+            </div>
+
+            <div className="flex-[15] min-w-0">
+              <button 
+                onClick={handleReset}
+                disabled={!isFiltered}
+                className={`w-full h-full rounded-xl flex items-center justify-center transition active:scale-95 shadow-sm border ${isFiltered ? 'bg-red-50 text-red-500 border-red-100' : 'bg-gray-50 text-gray-300 border-transparent cursor-not-allowed'}`}
+                title="Reset Filter"
+              >
+                <i className="fas fa-undo text-xs mr-1"></i>
+                <span className="text-[10px] font-black uppercase hidden md:inline">Reset</span>
+              </button>
             </div>
           </div>
         </div>
